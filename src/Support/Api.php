@@ -52,61 +52,71 @@ class Api {
 }
 
     public function sendMessage(string $chatId, string $text, ?array $metadata = null, ?array $replyMarkup = null): ?array {
-        $params = ['chat_id' => $chatId, 'text' => $text;
-        if($metadata){
-          $params['metadata'] = $metadata;
-        }
-        if ($replyMarkup) {
-            $params['reply_markup'] = json_encode($replyMarkup); 
-        }
+        $params = ['chat_id' => $chatId, 'text' => $text];
+        if($metadata) $params['metadata'] = $metadata;
+        
         return $this->callApi('sendMessage', $params);
     }
+    
+    public function sendKeypad(string $chatId, string $text, array $keypad, $keypadType = 'New'): ?array{
+      
+      return $this->callApi('sendMessage', [
+        'chat_id' => $chatId,
+        'text' => $text,
+        'chat_keypad_type' => $keypadType,
+        'chat_keypad' => $keypad
+        ]);
+      
+    }
+    public function sendInlineKeypad(string $chatId, string $text, array $keypad): ?array{
+      unset($keypad['resize_keyboard']);
+      unset($keypad['one_time_keyboard']);
+      return $this->callApi('sendMessage', [
+        'chat_id' => $chatId,
+        'text' => $text,
+        'inline_keypad' => $keypad
+        ]);
+      
+    }
 
-    public function sendPhoto(string $chatId, string $photo, ?string $caption = null, ?array $replyMarkup = null): ?array {
+    public function sendPhoto(string $chatId, string $photo, ?string $caption = null): ?array {
         $params = ['chat_id' => $chatId, 'photo' => $photo];
         if ($caption) $params['caption'] = $caption;
-        if ($replyMarkup) $params['reply_markup'] = json_encode($replyMarkup);
         return $this->callApi('sendPhoto', $params);
     }
 
-    public function sendVideo(string $chatId, string $video, ?string $caption = null, ?array $replyMarkup = null): ?array {
+    public function sendVideo(string $chatId, string $video, ?string $caption = null): ?array {
         $params = ['chat_id' => $chatId, 'video' => $video];
         if ($caption) $params['caption'] = $caption;
-        if ($replyMarkup) $params['reply_markup'] = json_encode($replyMarkup);
         return $this->callApi('sendVideo', $params);
     }
 
-    public function sendDocument(string $chatId, string $document, ?string $caption = null, ?array $replyMarkup = null): ?array {
+    public function sendDocument(string $chatId, string $document, ?string $caption = null): ?array {
         $params = ['chat_id' => $chatId, 'document' => $document];
         if ($caption) $params['caption'] = $caption;
-        if ($replyMarkup) $params['reply_markup'] = json_encode($replyMarkup);
         return $this->callApi('sendDocument', $params);
     }
     
-    public function sendAudio(string $chatId, string $audio, ?string $caption = null, ?array $replyMarkup = null): ?array {
+    public function sendAudio(string $chatId, string $audio, ?string $caption = null): ?array {
         $params = ['chat_id' => $chatId, 'audio' => $audio];
         if ($caption) $params['caption'] = $caption;
-        if ($replyMarkup) $params['reply_markup'] = json_encode($replyMarkup);
         return $this->callApi('sendAudio', $params);
     }
 
-    public function sendLocation(string $chatId, float $latitude, float $longitude, ?array $replyMarkup = null): ?array {
+    public function sendLocation(string $chatId, float $latitude, float $longitude): ?array {
         $params = ['chat_id' => $chatId, 'latitude' => $latitude, 'longitude' => $longitude];
-        if ($replyMarkup) $params['reply_markup'] = json_encode($replyMarkup);
         return $this->callApi('sendLocation', $params);
     }
 
     
-    public function sendContact(string $chatId, string $phoneNumber, string $firstName, ?string $lastName = null, ?array $replyMarkup = null): ?array {
+    public function sendContact(string $chatId, string $phoneNumber, string $firstName, ?string $lastName = null): ?array {
         $params = ['chat_id' => $chatId, 'phone_number' => $phoneNumber, 'first_name' => $firstName];
         if ($lastName) $params['last_name'] = $lastName;
-        if ($replyMarkup) $params['reply_markup'] = json_encode($replyMarkup);
         return $this->callApi('sendContact', $params);
     }
 
-    public function sendSticker(string $chatId, string $sticker, ?array $replyMarkup = null): ?array {
+    public function sendSticker(string $chatId, string $sticker): ?array {
         $params = ['chat_id' => $chatId, 'sticker' => $sticker];
-        if ($replyMarkup) $params['reply_markup'] = json_encode($replyMarkup);
         return $this->callApi('sendSticker', $params);
     }
     
@@ -161,11 +171,11 @@ class Api {
     }
     
     public function banChatMember(string $chatId, string $user_id): ?array{
-      $this->callApi('banChatMember', ['chat_id' => $chatId, 'user_id' => $user_id]);
+      return $this->callApi('banChatMember', ['chat_id' => $chatId, 'user_id' => $user_id]);
     }
     
     public function unbanChatMember(string $chatId, string $user_id): ?array{
-      $this->callApi('unbanChatMember', ['chat_id' => $chatId, 'user_id' => $user_id]);
+      return $this->callApi('unbanChatMember', ['chat_id' => $chatId, 'user_id' => $user_id]);
     }
 
     public function processUpdate(array $update): ?Update {
@@ -174,12 +184,11 @@ class Api {
             switch ($update['update']['type']) {
                 case 'NewMessage':
                     if (isset($update['update']['new_message'])) {
-                      file_put_contents('hhs.txt', $update['update']['chat_id']);
-                        return new NewMessageUpdate($update);
+                        return new NewMessageUpdate($update['update']);
                     }
                     break;
                 case 'InlineMessage':
-                  return new InlineMessage($update);
+                  return new InlineMessage($update['update']);
                   break;
             }
         }
